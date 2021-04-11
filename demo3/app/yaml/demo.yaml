@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: lb-demos
+  name: lb-demo-3
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lb-demo-3
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lb-demo-3
+    spec:
+      containers:
+        - name: lb-demo-3
+          image: 463113836977.dkr.ecr.ap-south-1.amazonaws.com/lb-demos/demo1
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+              protocol: "TCP"
+      nodeSelector:
+        role: db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-demo-3
+  namespace: lb-demos
+spec:
+  ports:
+    - port: 443
+      targetPort: 8080
+      protocol: TCP
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: lb-demo-3
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: lb-demo-3
+  namespace: lb-demos
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+    - hosts:
+      secretName: tls-secret
+  rules:
+    - http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: lb-demo-3
+              servicePort: 443

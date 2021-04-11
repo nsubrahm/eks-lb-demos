@@ -1,0 +1,38 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: lb-demos
+  region: ap-south-1
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+
+iam:
+  withOIDC: true
+
+managedNodeGroups:
+  - name: ng-db
+    labels: { role: db }
+    instanceType: t3.medium
+    desiredCapacity: 2
+    privateNetworking: true
+    iam:
+      attachPolicyARNs:
+        - "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        - "arn:aws:iam::accountId:policy/AWSLoadBalancerControllerIAMPolicy"
+
+  - name: ng-web
+    labels: { role: web }
+    instanceType: t3.medium
+    desiredCapacity: 2
+    privateNetworking: false
+    iam:
+      attachPolicyARNs:
+        - "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        - "arn:aws:iam::accountId:policy/AWSLoadBalancerControllerIAMPolicy"
